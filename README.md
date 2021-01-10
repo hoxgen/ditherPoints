@@ -1,0 +1,2 @@
+# ditherPoints
+Dithering tool (Openframeworks)
