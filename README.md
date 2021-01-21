@@ -1,7 +1,7 @@
 # ditherPoints
 Dithering tool (Openframeworks)
 
-## Usage:
+## Usage:
 
 ### Image  / Video mode
 
@@ -19,3 +19,7 @@ defines how many images should be processed for a video frame
 
 /data/export/
 - output folder
+
+## Example
+
+<img src="https://github.com/hoxgen/ditherPoints/blob/main/export%20example/traces-of-snow-960.gif">
