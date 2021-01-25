@@ -34,14 +34,14 @@ public:
     //images
     ofImage image, pix, imageOut, background, backgroundOut;
     
-    ofColor col;
+    ofColor col, col_bg, col_over;
     
     // Function for drawing images
     void drawImage(ofImage image, int x, int y, int w);
     
     // Function for pointilizing
     void chaosPoints(ofImage image, int m, int r, int t, int c);
-    void chaosPointsVid(ofImage image, ofImage image_bg, int m, int r, int t, int c, ofColor col);
+    void chaosPointsVid(ofImage image, ofImage image_bg, int m, int r, int t, int c);
 
     // we will have a dynaimic number of images, based on the content of a directory:
     int  nImages;

@@ -1,5 +1,6 @@
 #include "ofApp.h"
 #include "ofxDither.h"
+#include <iostream>
 
 enum
 {
@@ -16,12 +17,11 @@ void ofApp::setup()
 //    mode = 0; // single image
     mode = 1; // video
 
-    ofColor col;
     int mult_x, mult_y;
     
     // Resize multiplier (moves instances far from each other)
-    mult_x = 2;
-    mult_y = 2;
+    mult_x = 1;
+    mult_y = 1;
     
     width =  1920*mult_x;
     height = 1080*mult_y;
@@ -36,9 +36,6 @@ void ofApp::setup()
 //    width =  2160*mult_x;
 //    height = 3840*mult_y;
 
-    // Draw color
-    col = 0;
-    
     //How many images in single output file?
     nBatch = 80;
     
@@ -143,15 +140,15 @@ void ofApp::draw(){
         
         fbo.begin();
         // Start from some point in the process
-        //for (int i = 1256; (i < nImages); i++){
+//        for (int i = 1200; (i < nImages); i++){
+
 
         // Regular start
         for (int i = -nBatch; (i < nImages); i++){
-            //        cout << "progress: " << ofToString(i) << "/" << ofToString(nImages) << '\n';;
+            std::cout  << "progress: " << ofToString(i) << "/" << ofToString(nImages) << '\n';;
             ofClear(ofColor(0,0,0,0));
             ofBackground(255);
-            
-            col = 0;
+
             for (int ii = i + nBatch; (ii > (i - nBatch)); ii--){
                 if ((ii < nImages) && (ii > 0)) {
                     image.load(DIR.getPath(ii));
@@ -165,17 +162,16 @@ void ofApp::draw(){
                     
                     //Chaos points
                     int c = int(100* ((ii-i+1)/nBatch));
-                    //                    cout << "c: " << c << '\n';;
+                    std::cout << "c: " << c << '\n';;
                     //m = resize multiplier (multiplies size of original image)
                     //r = circle diameter (diameter in pixels)
                     //t = treshold - not useful on BW dithered images
                     //c = chaos power (1-100)
-                    chaosPointsVid(imageOut,image,2,2,250,c,col);
+                    chaosPointsVid(imageOut,image,1,1,250,c);
                     ofPopMatrix();
                 }
             }
             //Save file with the result
-            //        }
             fbo.readToPixels(savepix);
             ofSaveImage(savepix, "export/part"+ofToString(int(i+nBatch), 4, '0') + ".png", OF_IMAGE_QUALITY_BEST);
         }
@@ -303,12 +299,15 @@ void ofApp::chaosPoints(ofImage image, int m, int r, int t, int c){
 }
 
 
-void ofApp::chaosPointsVid(ofImage image, ofImage image_bg, int m, int r, int t, int c, ofColor col){
+void ofApp::chaosPointsVid(ofImage image, ofImage image_bg, int m, int r, int t, int c){
     //m = resize multiplier (multiplies size of original image)
     //r = circle diameter (diameter in pixels)
     //t = treshold - not useful on BW dithered images
     //c = chaos power (1-100)
-    ofColor col_bg = 255;
+
+    ofColor col(0);
+    ofColor col_bg(255);
+    ofColor col_over(255);
     ofPixels pix;
     ofPixels pix_bg;
     
@@ -388,8 +387,9 @@ void ofApp::chaosPointsVid(ofImage image, ofImage image_bg, int m, int r, int t,
         if ((light1 < t) && (ofRandom(0,100)<110-c)) {
             
             //            blur
-            //            ofDrawCircle((i % pix.getWidth() +1) * m - ofRandom(-r*c/4,r*c/4), n * m - ofRandom(-r*c,r*c),r);
-            ofDrawCircle((i % pix.getWidth() +1) * m - ofRandom(-r,r), n * m - ofRandom(-r,r),r);
+//                        ofDrawCircle((i % pix.getWidth() +1) * m - ofRandom(-r*c/4,r*c/4), n * m - ofRandom(-r*c,r*c),r);
+
+                        ofDrawCircle((i % pix.getWidth() +1) * m - ofRandom(-r,r), n * m - ofRandom(-r,r),r);
         }
         
         //useful when the circles are larger than 1
@@ -411,7 +411,7 @@ void ofApp::chaosPointsVid(ofImage image, ofImage image_bg, int m, int r, int t,
     }
     
     // draw white circles to get some overlay
-    ofSetColor(col_bg);
+    ofSetColor(col_over);
     i = 0;
     while( i < pix_bg.size()) {
         //examine nearby pixels
@@ -422,19 +422,41 @@ void ofApp::chaosPointsVid(ofImage image, ofImage image_bg, int m, int r, int t,
         //lightness of current pixel
         int light1 = pix_bg.getColor(i).getLightness();
    
-        if ((light1 < t) && (ofRandom(50,170)<100-c)) {
+        if ((light1 < t) && (ofRandom(0,170)<100-c)) {
             //            cout << "l: " << ofToString(light1) << '\n';;
             //blur
             //ofDrawCircle((i % pix.getWidth() +1) * m - ofRandom(-r*c/2,r*c/2), n * m - ofRandom(-r*c,r*c),r);
             ofDrawCircle((i % pix_bg.getWidth() +1) * m - ofRandom(-r,r), n * m - ofRandom(-r,r),r);
         }
-        if ((light1 < t) && (ofRandom(50,170)<100-c)) {
+        if ((light1 < t) && (ofRandom(0,170)<100-c)) {
             //            cout << "l: " << ofToString(light1) << '\n';;
             //blur
             ofDrawCircle((i % pix.getWidth() +1) * m - ofRandom(-r*c/4,r*c/4), n * m - ofRandom(-r*c/4,r*c/4),r);
             //ofDrawCircle((i % pix_bg.getWidth() +1) * m - ofRandom(-r,r), n * m - ofRandom(-r,r),r);
         }
         i++;
+
+//                //examine nearby pixels
+
+//                //width of each pixels row
+//                int n  = i / pix_bg.getWidth() + 1;
+
+//                //lightness of current pixel
+//                int light1 = pix_bg.getColor(i).getLightness();
+
+//                if ((light1 < t) && (ofRandom(0,170)<100-c)) {
+//                    //            cout << "l: " << ofToString(light1) << '\n';;
+//                    //blur
+//                    //ofDrawCircle((i % pix.getWidth() +1) * m - ofRandom(-r*c/2,r*c/2), n * m - ofRandom(-r*c,r*c),r);
+//                                ofDrawCircle((i % pix_bg.getWidth() +1) * m - ofRandom(-r,r), n * m - ofRandom(-r,r),r*2);
+//                }
+//                if ((light1 < t) && (ofRandom(00,230)<100-c)) {
+//                    //            cout << "l: " << ofToString(light1) << '\n';;
+//                    //blur
+//                    //ofDrawCircle((i % pix.getWidth() +1) * m - ofRandom(-r*c/4,r*c/4), n * m - ofRandom(-r*c/4,r*c/4),r);
+//                                ofDrawCircle((i % pix_bg.getWidth() +1) * m - ofRandom(-r,r), n * m - ofRandom(-r,r),r*2);
+//                }
+//                i++;
     }
     
     
