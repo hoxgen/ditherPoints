@@ -13,15 +13,15 @@ enum
 
 void ofApp::setup()
 {
-    
+    // SETTINGS ---------------------------------------------
 //    mode = 0; // single image
     mode = 1; // video
 
     int mult_x, mult_y;
     
     // Resize multiplier (moves instances far from each other)
-    mult_x = 1;
-    mult_y = 1;
+    mult_x = 2;
+    mult_y = 2;
     
     width =  1920*mult_x;
     height = 1080*mult_y;
@@ -37,8 +37,37 @@ void ofApp::setup()
 //    height = 3840*mult_y;
 
     //How many images in single output file?
-    nBatch = 80;
+    nBatch = 64;
     
+    //Color settings
+    col_bg.r = 220;
+    col_bg.g = 220;
+    col_bg.b = 220;
+
+    col.r = 0;
+    col.g = 0;
+    col.b = 0;
+
+    col_over.r = 255;
+    col_over.g = 255;
+    col_over.b = 255;
+
+    //BW
+//        col_bg.r = 255;
+//        col_bg.g = 255;
+//        col_bg.b = 255;
+
+//        col.r = 0;
+//        col.g = 0;
+//        col.b = 0;
+
+//        col_over.r = 255;
+//        col_over.g = 255;
+//        col_over.b = 255;
+
+
+    //-------------------------------------------------------
+
     //
     outTime = ofGetTimestampString("%m-%d-%H-%M-%S");
     
@@ -140,14 +169,16 @@ void ofApp::draw(){
         
         fbo.begin();
         // Start from some point in the process
-//        for (int i = 1200; (i < nImages); i++){
+//      for (int i = 600-nBatch; (i < nImages); i++){
 
 
         // Regular start
         for (int i = -nBatch; (i < nImages); i++){
-            std::cout  << "progress: " << ofToString(i) << "/" << ofToString(nImages) << '\n';;
+           // std::cout  << "progress: " << ofToString(i) << "/" << ofToString(nImages) << '\n';
             ofClear(ofColor(0,0,0,0));
-            ofBackground(255);
+            ofBackground(col_bg);
+
+            float c_run = 1;
 
             for (int ii = i + nBatch; (ii > (i - nBatch)); ii--){
                 if ((ii < nImages) && (ii > 0)) {
@@ -159,15 +190,22 @@ void ofApp::draw(){
                     
                     //Draw dithered mask in place
                     //imageOut.draw(images_x[ii],images_y[ii],images_w[ii],images_h[ii]);
-                    
+
+                    //c = chaos power (1-100)
+                    //int c = int(100* ((ii-i+1)/nBatch));
+
+                    //int c = int(100-(100*(1/c_run)));
+                    float c = 100-(100*(1/c_run));
+                    c_run = c_run+0.3;
+
                     //Chaos points
-                    int c = int(100* ((ii-i+1)/nBatch));
-                    std::cout << "c: " << c << '\n';;
+                    //std::cout << "c: " << c << '\n';
                     //m = resize multiplier (multiplies size of original image)
                     //r = circle diameter (diameter in pixels)
                     //t = treshold - not useful on BW dithered images
                     //c = chaos power (1-100)
-                    chaosPointsVid(imageOut,image,1,1,250,c);
+                    //colors
+                    chaosPointsVid(imageOut,image,2,2,250,c,col_bg,col,col_over);
                     ofPopMatrix();
                 }
             }
@@ -299,15 +337,12 @@ void ofApp::chaosPoints(ofImage image, int m, int r, int t, int c){
 }
 
 
-void ofApp::chaosPointsVid(ofImage image, ofImage image_bg, int m, int r, int t, int c){
+void ofApp::chaosPointsVid(ofImage image, ofImage image_bg, int m, int r, int t, float c, ofColor vcol_bg, ofColor vcol, ofColor vcol_over){
     //m = resize multiplier (multiplies size of original image)
     //r = circle diameter (diameter in pixels)
     //t = treshold - not useful on BW dithered images
     //c = chaos power (1-100)
 
-    ofColor col(0);
-    ofColor col_bg(255);
-    ofColor col_over(255);
     ofPixels pix;
     ofPixels pix_bg;
     
@@ -318,8 +353,8 @@ void ofApp::chaosPointsVid(ofImage image, ofImage image_bg, int m, int r, int t,
     image_bg.getTexture().readToPixels(pix_bg);
     int i = 0;
     
-    // draw white circles to get some background
-    ofSetColor(col_bg);
+    // --- draw white circles to get some background
+    ofSetColor(vcol_bg);
     while( i < pix_bg.size()) {
         //examine nearby pixels
         
@@ -344,10 +379,25 @@ void ofApp::chaosPointsVid(ofImage image, ofImage image_bg, int m, int r, int t,
         i++;
     }
     
-    // Draw black circles
+    // --- Draw black circles
     i = 0;
-    ofSetColor(col);
+    ofSetColor(vcol);
+
     while( i < pix.size()) {
+
+        //Random colors
+        vcol.r = int(ofRandom(c*2,255));
+        vcol.g = int(ofRandom(c*2,255));
+        vcol.b = int(ofRandom(c*2,255));
+
+//        vcol.r = int(c);
+//        vcol.g = int(c);
+//        vcol.b = int(c);
+
+
+        ofSetColor(vcol);
+
+
         //examine nearby pixels
         
         //width of each pixels row
@@ -373,25 +423,21 @@ void ofApp::chaosPointsVid(ofImage image, ofImage image_bg, int m, int r, int t,
         }
         
         //draw circle instead of current pixel
-        
         // V1 --- without randomness factor c --------------------
-        
         //draw black pixels
         //        if (light1 < t) {
         //            ofSetColor(col);
         //            ofDrawCircle((i % pix.getWidth() +1) * m - ofRandom(-r,r), n * m - ofRandom(-r,r),r);
         //        }
-        
         // V2 --- use c to multiply randomness 1-100 -----------------
         //display only some points according to randomness factor c
         if ((light1 < t) && (ofRandom(0,100)<110-c)) {
-            
             //            blur
 //                        ofDrawCircle((i % pix.getWidth() +1) * m - ofRandom(-r*c/4,r*c/4), n * m - ofRandom(-r*c,r*c),r);
 
                         ofDrawCircle((i % pix.getWidth() +1) * m - ofRandom(-r,r), n * m - ofRandom(-r,r),r);
         }
-        
+
         //useful when the circles are larger than 1
         //draw more circles to fill in black parts
         if ((light1 == 0) && (light2==0) && (ofRandom(0,150)<120-c)) {
@@ -410,54 +456,55 @@ void ofApp::chaosPointsVid(ofImage image, ofImage image_bg, int m, int r, int t,
         i++;
     }
     
-    // draw white circles to get some overlay
-    ofSetColor(col_over);
-    i = 0;
-    while( i < pix_bg.size()) {
-        //examine nearby pixels
+
+//    // --- draw circles to get some overlay with BG color
+//    ofSetColor(vcol_over);
+//    i = 0;
+//    while( i < pix_bg.size()) {
+//        //examine nearby pixels
         
-        //width of each pixels row
-        int n  = i / pix_bg.getWidth() + 1;
+//        //width of each pixels row
+//        int n  = i / pix_bg.getWidth() + 1;
         
-        //lightness of current pixel
-        int light1 = pix_bg.getColor(i).getLightness();
+//        //lightness of current pixel
+//        int light1 = pix_bg.getColor(i).getLightness();
    
-        if ((light1 < t) && (ofRandom(0,170)<100-c)) {
-            //            cout << "l: " << ofToString(light1) << '\n';;
-            //blur
-            //ofDrawCircle((i % pix.getWidth() +1) * m - ofRandom(-r*c/2,r*c/2), n * m - ofRandom(-r*c,r*c),r);
-            ofDrawCircle((i % pix_bg.getWidth() +1) * m - ofRandom(-r,r), n * m - ofRandom(-r,r),r);
-        }
-        if ((light1 < t) && (ofRandom(0,170)<100-c)) {
-            //            cout << "l: " << ofToString(light1) << '\n';;
-            //blur
-            ofDrawCircle((i % pix.getWidth() +1) * m - ofRandom(-r*c/4,r*c/4), n * m - ofRandom(-r*c/4,r*c/4),r);
-            //ofDrawCircle((i % pix_bg.getWidth() +1) * m - ofRandom(-r,r), n * m - ofRandom(-r,r),r);
-        }
-        i++;
+//        if ((light1 < t) && (ofRandom(50,100)>c)) {
+//            //            cout << "l: " << ofToString(light1) << '\n';;
+//            //blur
+//            //ofDrawCircle((i % pix.getWidth() +1) * m - ofRandom(-r*c/2,r*c/2), n * m - ofRandom(-r*c,r*c),r);
+//            ofDrawCircle((i % pix_bg.getWidth() +1) * m - ofRandom(-r,r), n * m - ofRandom(-r,r),r*2);
+//        }
+//        if ((light1 < t) && (ofRandom(20,100)>c)) {
+//            //            cout << "l: " << ofToString(light1) << '\n';;
+//            //blur
+//            //ofDrawCircle((i % pix.getWidth() +1) * m - ofRandom(-r*c/4,r*c/4), n * m - ofRandom(-r*c/4,r*c/4),r*2);
+//            ofDrawCircle((i % pix_bg.getWidth() +1) * m - ofRandom(-r,r), n * m - ofRandom(-r,r),r*2);
+//        }
+//        i++;
 
-//                //examine nearby pixels
+////                //examine nearby pixels
 
-//                //width of each pixels row
-//                int n  = i / pix_bg.getWidth() + 1;
+////                //width of each pixels row
+////                int n  = i / pix_bg.getWidth() + 1;
 
-//                //lightness of current pixel
-//                int light1 = pix_bg.getColor(i).getLightness();
+////                //lightness of current pixel
+////                int light1 = pix_bg.getColor(i).getLightness();
 
-//                if ((light1 < t) && (ofRandom(0,170)<100-c)) {
-//                    //            cout << "l: " << ofToString(light1) << '\n';;
-//                    //blur
-//                    //ofDrawCircle((i % pix.getWidth() +1) * m - ofRandom(-r*c/2,r*c/2), n * m - ofRandom(-r*c,r*c),r);
-//                                ofDrawCircle((i % pix_bg.getWidth() +1) * m - ofRandom(-r,r), n * m - ofRandom(-r,r),r*2);
-//                }
-//                if ((light1 < t) && (ofRandom(00,230)<100-c)) {
-//                    //            cout << "l: " << ofToString(light1) << '\n';;
-//                    //blur
-//                    //ofDrawCircle((i % pix.getWidth() +1) * m - ofRandom(-r*c/4,r*c/4), n * m - ofRandom(-r*c/4,r*c/4),r);
-//                                ofDrawCircle((i % pix_bg.getWidth() +1) * m - ofRandom(-r,r), n * m - ofRandom(-r,r),r*2);
-//                }
-//                i++;
-    }
+////                if ((light1 < t) && (ofRandom(0,170)<100-c)) {
+////                    //            cout << "l: " << ofToString(light1) << '\n';;
+////                    //blur
+////                    //ofDrawCircle((i % pix.getWidth() +1) * m - ofRandom(-r*c/2,r*c/2), n * m - ofRandom(-r*c,r*c),r);
+////                                ofDrawCircle((i % pix_bg.getWidth() +1) * m - ofRandom(-r,r), n * m - ofRandom(-r,r),r*2);
+////                }
+////                if ((light1 < t) && (ofRandom(00,230)<100-c)) {
+////                    //            cout << "l: " << ofToString(light1) << '\n';;
+////                    //blur
+////                    //ofDrawCircle((i % pix.getWidth() +1) * m - ofRandom(-r*c/4,r*c/4), n * m - ofRandom(-r*c/4,r*c/4),r);
+////                                ofDrawCircle((i % pix_bg.getWidth() +1) * m - ofRandom(-r,r), n * m - ofRandom(-r,r),r*2);
+////                }
+////                i++;
+//    }
     
     
 }

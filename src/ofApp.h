@@ -41,9 +41,9 @@ public:
     
     // Function for pointilizing
     void chaosPoints(ofImage image, int m, int r, int t, int c);
-    void chaosPointsVid(ofImage image, ofImage image_bg, int m, int r, int t, int c);
+    void chaosPointsVid(ofImage image, ofImage image_bg, int m, int r, int t, float c, ofColor vcol_bg, ofColor vcol, ofColor vcol_over);
 
-    // we will have a dynaimic number of images, based on the content of a directory:
+    // we will have a dynamic number of images, based on the content of a directory:
     int  nImages;
     ofDirectory DIR;
     vector<ofImage> images;
