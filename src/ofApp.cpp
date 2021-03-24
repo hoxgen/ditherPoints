@@ -169,11 +169,11 @@ void ofApp::draw(){
         
         fbo.begin();
         // Start from some point in the process
-//      for (int i = 600-nBatch; (i < nImages); i++){
+      for (int i = 680-nBatch; (i < nImages); i++){
 
 
         // Regular start
-        for (int i = -nBatch; (i < nImages); i++){
+//        for (int i = -nBatch; (i < nImages); i++){
            // std::cout  << "progress: " << ofToString(i) << "/" << ofToString(nImages) << '\n';
             ofClear(ofColor(0,0,0,0));
             ofBackground(col_bg);
